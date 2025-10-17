@@ -1,3 +1,4 @@
+import os
 from typing import Annotated, Tuple
 from urllib.parse import urlparse, urlunparse
 
@@ -22,6 +23,9 @@ from pydantic import BaseModel, Field, AnyUrl
 
 DEFAULT_USER_AGENT_AUTONOMOUS = "ModelContextProtocol/1.0 (Autonomous; +https://github.com/modelcontextprotocol/servers)"
 DEFAULT_USER_AGENT_MANUAL = "ModelContextProtocol/1.0 (User-Specified; +https://github.com/modelcontextprotocol/servers)"
+
+# Read max_length default from environment variable, fallback to 5000
+DEFAULT_MAX_LENGTH = int(os.getenv("FETCH_MAX_LENGTH", "5000"))
 
 
 def extract_content_from_html(html: str) -> str:
@@ -134,6 +138,10 @@ async def fetch_url(
 
         page_raw = response.text
 
+    # Check if URL ends with .md (case-insensitive) - treat as markdown directly
+    if url.lower().endswith('.md'):
+        return page_raw, ""
+    
     content_type = response.headers.get("content-type", "")
     is_page_html = (
         "<html" in page_raw[:100] or "text/html" in content_type or not content_type
@@ -155,8 +163,8 @@ class Fetch(BaseModel):
     max_length: Annotated[
         int,
         Field(
-            default=5000,
-            description="Maximum number of characters to return.",
+            default=DEFAULT_MAX_LENGTH,
+            description="Maximum number of characters to return. Can be overridden by FETCH_MAX_LENGTH environment variable.",
             gt=0,
             lt=1000000,
         ),
