@@ -26,6 +26,8 @@ DEFAULT_USER_AGENT_MANUAL = "ModelContextProtocol/1.0 (User-Specified; +https://
 
 # Read max_length default from environment variable, fallback to 5000
 DEFAULT_MAX_LENGTH = int(os.getenv("FETCH_MAX_LENGTH", "5000"))
+# Read max_length upper limit from environment variable, fallback to 10000000 (10MB)
+MAX_LENGTH_LIMIT = int(os.getenv("FETCH_MAX_LENGTH_LIMIT", "10000000"))
 
 
 def extract_content_from_html(html: str) -> str:
@@ -166,7 +168,7 @@ class Fetch(BaseModel):
             default=DEFAULT_MAX_LENGTH,
             description="Maximum number of characters to return. Can be overridden by FETCH_MAX_LENGTH environment variable.",
             gt=0,
-            lt=1000000,
+            lt=MAX_LENGTH_LIMIT,
         ),
     ]
     start_index: Annotated[
